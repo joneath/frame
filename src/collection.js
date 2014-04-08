@@ -99,6 +99,7 @@ module.exports = Collection = Backbone.Collection.extend({
     .then(function() {
       (this.length || this.allowEmpty) && this.setFetched(true);
       this.trigger('fetched');
+      return this;
     }.bind(this));
     this.trigger('fetch', this.promise);
 
