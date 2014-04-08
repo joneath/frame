@@ -1,5 +1,5 @@
-var collectionManager = require('./collection_manager'),
-    modelFactory = require('./model_factory'),
+var Model = require('./model'),
+    collectionManager = require('./collection_manager'),
     mediator = require('./mediator'),
     mixin = require('./mixin'),
     namedParamRegex = /(\(\?)?:\w+/g,
@@ -7,6 +7,7 @@ var collectionManager = require('./collection_manager'),
 
 module.exports = Collection = Backbone.Collection.extend({
   mediator: mediator,
+  model: Model,
   modelName: 'base',
 
   initialize: function(items, options) {

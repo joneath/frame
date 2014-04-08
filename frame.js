@@ -28,8 +28,8 @@ module.exports = Backbone.Model.extend({
 });
 
 },{}],2:[function(require,module,exports){
-var collectionManager = require('./collection_manager'),
-    modelFactory = require('./model_factory'),
+var Model = require('./model'),
+    collectionManager = require('./collection_manager'),
     mediator = require('./mediator'),
     mixin = require('./mixin'),
     namedParamRegex = /(\(\?)?:\w+/g,
@@ -37,6 +37,7 @@ var collectionManager = require('./collection_manager'),
 
 module.exports = Collection = Backbone.Collection.extend({
   mediator: mediator,
+  model: Model,
   modelName: 'base',
 
   initialize: function(items, options) {
@@ -147,7 +148,7 @@ module.exports = Collection = Backbone.Collection.extend({
 // Add mixin method
 Collection.mixin = mixin;
 
-},{"./collection_manager":4,"./mediator":10,"./mixin":11,"./model_factory":13}],3:[function(require,module,exports){
+},{"./collection_manager":4,"./mediator":10,"./mixin":11,"./model":12}],3:[function(require,module,exports){
 module.exports = function(type, models, options) {
   var collectionsPath,
       Collection;
