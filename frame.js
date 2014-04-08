@@ -1,11 +1,6 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 module.exports = Backbone.Model.extend({
   defaults: {
-    modelPath: 'models/',
-    collectionsPath: 'collections/',
-    controllerPath: 'controllers/',
-    middlewarePath: 'middlewares/',
-    mixinPath: 'mixins/',
     followLinks: true,
     routes: {}
   },
@@ -18,17 +13,17 @@ module.exports = Backbone.Model.extend({
     }
 
     this._dispatcher = new Frame.Dispatcher({
-      routes: this.get('routes'),
-      controllerPath: this.get('controllerPath'),
-      middlewarePath: this.get('middlewarePath')
+      routes: this.get('routes')
     });
 
-    $(function() {
+    Frame._app = this;
+
+    // Allow app to get fully initialized before routes fire
+    _.defer(function() {
       Backbone.history.start({
         pushState: true
       });
     });
-    Frame._app = this;
   }
 });
 
@@ -79,19 +74,22 @@ module.exports = Collection = Backbone.Collection.extend({
     if (attrs instanceof Backbone.Model) return attrs;
     options = options ? _.clone(options) : {};
     options.collection = this;
-    var model = this.model(attrs, options);
+    var model = this._model(attrs, options);
     if (!model.validationError) return model;
     this.trigger('invalid', this, model.validationError, options);
     return false;
   },
 
-  model: function(attrs, options) {
-    var model = modelFactory(this.modelName, attrs, options);
+  _model: function(attrs, options) {
+    var model;
 
-    // Store created model unless it's a base model
-    if (model.id && this.modelName != 'base') {
-      model.store(this.modelName + ':' + model.id);
+    if (this.model) {
+      model = modelFactory(this.model, attrs, options);
+      model.id && model.store(this.model + ':' + model.id);
+    } else {
+      model = new Frame.Model(attrs, options);
     }
+
     if (_.keys(attrs).length > 1) {
       model.setFetched(true);
     }
@@ -128,7 +126,7 @@ module.exports = Collection = Backbone.Collection.extend({
     .then(function() {
       (this.length || this.allowEmpty) && this.setFetched(true);
       this.trigger('fetched');
-    });
+    }.bind(this));
     this.trigger('fetch', this.promise);
 
     return this.promise;
@@ -149,18 +147,18 @@ Collection.mixin = mixin;
 
 },{"./collection_manager":4,"./mediator":10,"./mixin":11,"./model_factory":13}],3:[function(require,module,exports){
 module.exports = function(type, models, options) {
-  var collectionPath,
+  var collectionsPath,
       Collection;
 
   if (!type || !_.isString(type)) {
     throw 'Collection type is required!';
   }
 
-  collectionPath = Frame._app.get('collectionPath') + type;
-  Collection = require(collectionPath);
+  collectionsPath = 'collections/' + type;
+  Collection = require(collectionsPath);
 
   if (!Collection) {
-    throw collectionPath + ' is an undefined collection';
+    throw collectionsPath + ' is an undefined collection';
   }
   return new Collection(models, options);
 };
@@ -175,7 +173,7 @@ module.exports = {
       collection = null;
     }
     if (!collection) {
-      collection = Frame._collectionFactory(type, models, options);
+      collection = Frame.collectionFactory(type, models, options);
       this.set(id, collection);
     }
 
@@ -568,7 +566,7 @@ module.exports = function() {
   var mixins = Array.prototype.slice.apply(arguments);
   _.each(mixins, function(mixinModule) {
     if (_.isString(mixinModule)) {
-      mixinModule = require(Frame._app.get('mixinPath') + mixinModule);
+      mixinModule = require('mixins/' + mixinModule);
     }
     if (this.prototype.events && mixinModule.events) {
       _.merge(this.prototype.events, mixinModule.events);
@@ -670,7 +668,7 @@ module.exports = Model = Backbone.Model.extend({
     .then(function() {
       this.trigger('fetched');
       this.setFetched(true);
-    });
+    }.bind(this));
     this.trigger('fetch', this.promise);
 
     return this.promise;
@@ -728,18 +726,18 @@ Model.mixin = mixin;
 
 },{"./mediator":10,"./mixin":11,"./model_manager":14}],13:[function(require,module,exports){
 module.exports = function(type, attrs, options) {
-  var modelPath,
+  var modelsPath,
       Model;
 
   if (!type) {
     throw 'Model type is required!';
   }
 
-  modelPath = Frame._app.get('modelPath') + type;
-  Model = require(modelPath);
+  modelsPath = 'models/' + type;
+  Model = require(modelsPath);
 
   if (!Model) {
-    throw modelPath + ' is an undefined model';
+    throw modelsPath + ' is an undefined model';
   }
   return new Model(attrs, options);
 };
@@ -804,10 +802,6 @@ module.exports = View = Backbone.View.extend({
   showLoader: noOp,
   hideLoader: noOp,
   mediator: mediator,
-  spinOptions: {
-    color: '#444',
-    preset: 'small'
-  },
 
   initialize: function(options) {
     options || (options = {});
