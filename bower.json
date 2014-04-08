@@ -1,0 +1,9 @@
+{
+  "name"          : "frame",
+  "version"       : "0.1",
+  "main"          : "frame.js",
+  "dependencies"  : {
+    "lodash"  : ">=2.4.1"
+  },
+  "ignore"        : ["backbone-min.js", "docs", "examples", "test", ".html", "*.ico"]
+}

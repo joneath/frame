@@ -16,16 +16,24 @@ module.exports = function (grunt) {
         'test/spec/{,*/}*.js'
       ]
     },
+    browserify: {
+      dist: {
+        files: {
+          'frame.js': ['src/frame.js']
+        }
+      }
+    },
     uglify: {
       build: {
         files: {
-          'dist/frame.min.js': ['src/frame.js']
+          'frame.min.js': ['frame.js']
         }
       }
     }
   });
 
   grunt.registerTask('build', [
+    'browserify',
     'uglify'
   ]);
 

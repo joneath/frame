@@ -91,6 +91,9 @@
     "define": true,
     "require": true,
     "$": true,
-    "module": true
+    "module": true,
+    "Frame": true,
+    "Backbone": true,
+    "_": true
   }
 }
