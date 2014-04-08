@@ -13,10 +13,6 @@ module.exports = View = Backbone.View.extend({
   showLoader: noOp,
   hideLoader: noOp,
   mediator: mediator,
-  spinOptions: {
-    color: '#444',
-    preset: 'small'
-  },
 
   initialize: function(options) {
     options || (options = {});

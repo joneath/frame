@@ -80,7 +80,7 @@ module.exports = Model = Backbone.Model.extend({
     .then(function() {
       this.trigger('fetched');
       this.setFetched(true);
-    });
+    }.bind(this));
     this.trigger('fetch', this.promise);
 
     return this.promise;

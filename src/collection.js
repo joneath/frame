@@ -44,19 +44,22 @@ module.exports = Collection = Backbone.Collection.extend({
     if (attrs instanceof Backbone.Model) return attrs;
     options = options ? _.clone(options) : {};
     options.collection = this;
-    var model = this.model(attrs, options);
+    var model = this._model(attrs, options);
     if (!model.validationError) return model;
     this.trigger('invalid', this, model.validationError, options);
     return false;
   },
 
-  model: function(attrs, options) {
-    var model = modelFactory(this.modelName, attrs, options);
+  _model: function(attrs, options) {
+    var model;
 
-    // Store created model unless it's a base model
-    if (model.id && this.modelName != 'base') {
-      model.store(this.modelName + ':' + model.id);
+    if (this.model) {
+      model = modelFactory(this.model, attrs, options);
+      model.id && model.store(this.model + ':' + model.id);
+    } else {
+      model = new Frame.Model(attrs, options);
     }
+
     if (_.keys(attrs).length > 1) {
       model.setFetched(true);
     }
@@ -93,7 +96,7 @@ module.exports = Collection = Backbone.Collection.extend({
     .then(function() {
       (this.length || this.allowEmpty) && this.setFetched(true);
       this.trigger('fetched');
-    });
+    }.bind(this));
     this.trigger('fetch', this.promise);
 
     return this.promise;

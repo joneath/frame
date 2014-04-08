@@ -7,7 +7,7 @@ module.exports = {
       collection = null;
     }
     if (!collection) {
-      collection = Frame._collectionFactory(type, models, options);
+      collection = Frame.collectionFactory(type, models, options);
       this.set(id, collection);
     }
 

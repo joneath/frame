@@ -1,10 +1,5 @@
 module.exports = Backbone.Model.extend({
   defaults: {
-    modelPath: 'models/',
-    collectionsPath: 'collections/',
-    controllerPath: 'controllers/',
-    middlewarePath: 'middlewares/',
-    mixinPath: 'mixins/',
     followLinks: true,
     routes: {}
   },
@@ -17,16 +12,16 @@ module.exports = Backbone.Model.extend({
     }
 
     this._dispatcher = new Frame.Dispatcher({
-      routes: this.get('routes'),
-      controllerPath: this.get('controllerPath'),
-      middlewarePath: this.get('middlewarePath')
+      routes: this.get('routes')
     });
 
-    $(function() {
+    Frame._app = this;
+
+    // Allow app to get fully initialized before routes fire
+    _.defer(function() {
       Backbone.history.start({
         pushState: true
       });
     });
-    Frame._app = this;
   }
 });

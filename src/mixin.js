@@ -2,7 +2,7 @@ module.exports = function() {
   var mixins = Array.prototype.slice.apply(arguments);
   _.each(mixins, function(mixinModule) {
     if (_.isString(mixinModule)) {
-      mixinModule = require(Frame._app.get('mixinPath') + mixinModule);
+      mixinModule = require('mixins/' + mixinModule);
     }
     if (this.prototype.events && mixinModule.events) {
       _.merge(this.prototype.events, mixinModule.events);
