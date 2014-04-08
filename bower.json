@@ -1,6 +1,6 @@
 {
   "name"          : "frame",
-  "version"       : "0.1",
+  "version"       : "0.1.1",
   "main"          : "frame.js",
   "dependencies"  : {
     "jquery"  : ">=2.1",
