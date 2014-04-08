@@ -4,10 +4,10 @@
     define(['backbone', 'underscore', 'jquery', 'exports'], function(Backbone, _, $, exports) {
       // Export global even in AMD case in case this script is loaded with
       // others that may still expect a global Backbone.
-      this.Frame = factory(this, exports, Backbone, _, $);
+      window.Frame = factory(window, exports, Backbone, _, $);
     });
   } else {
-    this.Frame = factory(this, {}, this.Backbone, this._, (this.jQuery || this.Zepto || this.ender || this.$));
+    window.Frame = factory(window, {}, this.Backbone, this._, (this.jQuery || this.Zepto || this.ender || this.$));
   }
 
 }(function(root, Frame, Backbone, _, $) {
