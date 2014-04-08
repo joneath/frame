@@ -84,8 +84,10 @@ module.exports = Collection = Backbone.Collection.extend({
     var model;
 
     if (this.model) {
-      model = modelFactory(this.model, attrs, options);
-      model.id && model.store(this.model + ':' + model.id);
+      model = new this.model(attrs, options);
+      if (model.id && this.modelName != 'base') {
+        model.store(this.modelName + ':' + model.id);
+      }
     } else {
       model = new Frame.Model(attrs, options);
     }
@@ -707,7 +709,9 @@ module.exports = Model = Backbone.Model.extend({
     var savePromise = this.promise = Backbone.Model.prototype.save.apply(this, arguments);
     if (savePromise) {
       savePromise.then(function() {
-        this.collection && this.store(this.collection.modelName + ':' + this.id);
+        if (this.collection && this.collection.modelName != 'base') {
+          this.store(this.collection.modelName + ':' + this.id);
+        }
         this.setFetched(true);
         this.trigger('save:success');
       }.bind(this))

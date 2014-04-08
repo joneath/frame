@@ -119,7 +119,9 @@ module.exports = Model = Backbone.Model.extend({
     var savePromise = this.promise = Backbone.Model.prototype.save.apply(this, arguments);
     if (savePromise) {
       savePromise.then(function() {
-        this.collection && this.store(this.collection.modelName + ':' + this.id);
+        if (this.collection && this.collection.modelName != 'base') {
+          this.store(this.collection.modelName + ':' + this.id);
+        }
         this.setFetched(true);
         this.trigger('save:success');
       }.bind(this))

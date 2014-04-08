@@ -54,8 +54,10 @@ module.exports = Collection = Backbone.Collection.extend({
     var model;
 
     if (this.model) {
-      model = modelFactory(this.model, attrs, options);
-      model.id && model.store(this.model + ':' + model.id);
+      model = new this.model(attrs, options);
+      if (model.id && this.modelName != 'base') {
+        model.store(this.modelName + ':' + model.id);
+      }
     } else {
       model = new Frame.Model(attrs, options);
     }
