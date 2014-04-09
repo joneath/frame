@@ -12,16 +12,14 @@
 
 }(function(root, Frame, Backbone, _, $) {
   _.extend(Frame, {
-    _appModels: {},
-    _appCollections: {},
+    _store: {},
     App: require('./app'),
     mediator: require('./mediator'),
     mixin: require('./mixin'),
     LinkHelper: require('./link_helper'),
     modelFactory: require('./model_factory'),
-    modelManager: require('./model_manager'),
     collectionFactory: require('./collection_factory'),
-    collectionManager: require('./collection_manager'),
+    store: require('./store'),
     fetcher: require('./fetcher'),
     Model: require('./model'),
     Collection: require('./collection'),

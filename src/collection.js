@@ -1,5 +1,5 @@
 var Model = require('./model'),
-    collectionManager = require('./collection_manager'),
+    store = require('./store'),
     mediator = require('./mediator'),
     mixin = require('./mixin'),
     namedParamRegex = /(\(\?)?:\w+/g,
@@ -13,7 +13,6 @@ module.exports = Collection = Backbone.Collection.extend({
   initialize: function(items, options) {
     options || (options = {});
     this.setFetched(!!options.fetched);
-    this._resourceId = options.resourceId;
     this._nested = options.nested;
     this._resourceUrl = this.url;
     this.url = this._url;
@@ -82,7 +81,7 @@ module.exports = Collection = Backbone.Collection.extend({
   },
 
   store: function(id) {
-    collectionManager.set(id, this);
+    store.set(id, this);
   },
 
   isFetched: function() {

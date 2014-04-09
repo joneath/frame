@@ -1,5 +1,4 @@
-var modelManager = require('./model_manager'),
-    collectionManager = require('./collection_manager'),
+var store = require('./store'),
     fetcher = require('./fetcher'),
     mediator = require('./mediator'),
     mixin = require('./mixin'),
@@ -23,6 +22,7 @@ module.exports = Controller = function(options) {
 
   // resources
   _.each(this.resources, function(config, objName) {
+    config === true && (config = {});
     var actions = config.actions;
     config.name = objName;
     if (!actions || actions[0] === 'all') {
@@ -50,8 +50,7 @@ module.exports = Controller = function(options) {
 _.extend(Controller.prototype, Backbone.Events, {
   mediator: mediator,
   fetcher: fetcher,
-  modelManager: modelManager,
-  collectionManager: collectionManager,
+  store: store,
 
   initialize: function() {},
 
@@ -88,7 +87,7 @@ _.extend(Controller.prototype, Backbone.Events, {
           id = args[args.length - 1];
         }
         _.each(storedResources, function(config) {
-          resourceId = '';
+          resourceId = _.uniqueId(config.name);
           fetchParams = null;
           if (config.id) {
             if (_.isFunction(config.id)) {
@@ -106,11 +105,14 @@ _.extend(Controller.prototype, Backbone.Events, {
           }
           var resource = this.fetcher.fetch({
             id: resourceId,
-            data: config.model ? {id: id} : null,
-            model: config.model,
-            collection: config.collection,
-            options: {resourceId: resourceId, nested: args},
-            fetchOptions: {data: fetchParams}
+            resource: config.name,
+            options: {
+              nested: args,
+              data: {id: id},
+              ajax: {
+                data: fetchParams
+              }
+            }
           });
           config.wait && promises.push(resource.promise);
           data[config.name] = resource;

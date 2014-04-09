@@ -26,7 +26,7 @@ module.exports = Backbone.Model.extend({
 
 },{}],2:[function(require,module,exports){
 var Model = require('./model'),
-    collectionManager = require('./collection_manager'),
+    store = require('./store'),
     mediator = require('./mediator'),
     mixin = require('./mixin'),
     namedParamRegex = /(\(\?)?:\w+/g,
@@ -40,7 +40,6 @@ module.exports = Collection = Backbone.Collection.extend({
   initialize: function(items, options) {
     options || (options = {});
     this.setFetched(!!options.fetched);
-    this._resourceId = options.resourceId;
     this._nested = options.nested;
     this._resourceUrl = this.url;
     this.url = this._url;
@@ -109,7 +108,7 @@ module.exports = Collection = Backbone.Collection.extend({
   },
 
   store: function(id) {
-    collectionManager.set(id, this);
+    store.set(id, this);
   },
 
   isFetched: function() {
@@ -146,7 +145,7 @@ module.exports = Collection = Backbone.Collection.extend({
 // Add mixin method
 Collection.mixin = mixin;
 
-},{"./collection_manager":4,"./mediator":10,"./mixin":11,"./model":12}],3:[function(require,module,exports){
+},{"./mediator":9,"./mixin":10,"./model":11,"./store":13}],3:[function(require,module,exports){
 module.exports = function(type, models, options) {
   var collectionsPath,
       Collection;
@@ -165,43 +164,7 @@ module.exports = function(type, models, options) {
 };
 
 },{}],4:[function(require,module,exports){
-module.exports = {
-  get: function(type, identifier, models, options) {
-    var id = type + ':' + identifier,
-        collection = Frame._appCollections[id];
-
-    if (collection && collection._TTL <= Date.now()) {
-      collection = null;
-    }
-    if (!collection) {
-      collection = Frame.collectionFactory(type, models, options);
-      this.set(id, collection);
-    }
-
-    return collection;
-  },
-
-  set: function(identifier, collection) {
-    Frame._appCollections[identifier] = collection;
-    // 5 minute TTL
-    collection._TTL = Date.now() + (collection.cacheTTL || 60 * 5 * 1000);
-    collection.on('change', this._updateTTL);
-  },
-
-  destroy: function(identifier) {
-    var collection = Frame._appCollections[identifier];
-    collection.off('change', this._updateTTL);
-    delete Frame._appCollections[identifier];
-  },
-
-  _updateTTL: function() {
-    this._TTL = Date.now() + (this.cacheTTL || 60 * 5 * 1000);
-  }
-};
-
-},{}],5:[function(require,module,exports){
-var modelManager = require('./model_manager'),
-    collectionManager = require('./collection_manager'),
+var store = require('./store'),
     fetcher = require('./fetcher'),
     mediator = require('./mediator'),
     mixin = require('./mixin'),
@@ -225,6 +188,7 @@ module.exports = Controller = function(options) {
 
   // resources
   _.each(this.resources, function(config, objName) {
+    config === true && (config = {});
     var actions = config.actions;
     config.name = objName;
     if (!actions || actions[0] === 'all') {
@@ -252,8 +216,7 @@ module.exports = Controller = function(options) {
 _.extend(Controller.prototype, Backbone.Events, {
   mediator: mediator,
   fetcher: fetcher,
-  modelManager: modelManager,
-  collectionManager: collectionManager,
+  store: store,
 
   initialize: function() {},
 
@@ -290,7 +253,7 @@ _.extend(Controller.prototype, Backbone.Events, {
           id = args[args.length - 1];
         }
         _.each(storedResources, function(config) {
-          resourceId = '';
+          resourceId = _.uniqueId(config.name);
           fetchParams = null;
           if (config.id) {
             if (_.isFunction(config.id)) {
@@ -308,11 +271,14 @@ _.extend(Controller.prototype, Backbone.Events, {
           }
           var resource = this.fetcher.fetch({
             id: resourceId,
-            data: config.model ? {id: id} : null,
-            model: config.model,
-            collection: config.collection,
-            options: {resourceId: resourceId, nested: args},
-            fetchOptions: {data: fetchParams}
+            resource: config.name,
+            options: {
+              nested: args,
+              data: {id: id},
+              ajax: {
+                data: fetchParams
+              }
+            }
           });
           config.wait && promises.push(resource.promise);
           data[config.name] = resource;
@@ -364,7 +330,7 @@ _.extend(Controller.prototype, Backbone.Events, {
 Controller.extend = Backbone.Model.extend;
 Controller.mixin = mixin;
 
-},{"./collection_manager":4,"./fetcher":7,"./mediator":10,"./mixin":11,"./model_manager":14}],6:[function(require,module,exports){
+},{"./fetcher":6,"./mediator":9,"./mixin":10,"./store":13}],5:[function(require,module,exports){
 var mediator = require('./mediator'),
     dispatcherOptions = ['routes', 'controllerPath', 'middlewarePath'],
     Dispatcher;
@@ -473,26 +439,26 @@ _.extend(Dispatcher.prototype, Backbone.Events, {
 // Use Backbone's extend inheritance
 Dispatcher.extend = Backbone.Model.extend;
 
-},{"./mediator":10}],7:[function(require,module,exports){
-var modelManager = require('./model_manager'),
-    collectionManager = require('./collection_manager');
+},{"./mediator":9}],6:[function(require,module,exports){
+var store = require('./store');
 
 module.exports = {
   fetch: function(config) {
-    var resource;
+    var resource, ajaxOptions;
 
-    if (config.model) {
-      resource = modelManager.get(config.model, config.id, config.data, config.options);
-    } else {
-      resource = collectionManager.get(config.collection, config.id, config.data, config.options);
+    if (config.options) {
+      ajaxOptions = config.options.ajax;
+      delete config.options.ajax;
     }
-    resource.fetchCached(config.fetchOptions);
+
+    resource = store.get(config);
+    resource.fetchCached(ajaxOptions);
 
     return resource;
   }
 };
 
-},{"./collection_manager":4,"./model_manager":14}],8:[function(require,module,exports){
+},{"./store":13}],7:[function(require,module,exports){
 (function(factory) {
   // Set up Frame appropriately for the environment. Start with AMD.
   if (typeof define === 'function' && define.amd) {
@@ -507,16 +473,14 @@ module.exports = {
 
 }(function(root, Frame, Backbone, _, $) {
   _.extend(Frame, {
-    _appModels: {},
-    _appCollections: {},
+    _store: {},
     App: require('./app'),
     mediator: require('./mediator'),
     mixin: require('./mixin'),
     LinkHelper: require('./link_helper'),
     modelFactory: require('./model_factory'),
-    modelManager: require('./model_manager'),
     collectionFactory: require('./collection_factory'),
-    collectionManager: require('./collection_manager'),
+    store: require('./store'),
     fetcher: require('./fetcher'),
     Model: require('./model'),
     Collection: require('./collection'),
@@ -530,7 +494,7 @@ module.exports = {
   return Frame;
 }));
 
-},{"./app":1,"./collection":2,"./collection_factory":3,"./collection_manager":4,"./controller":5,"./dispatcher":6,"./fetcher":7,"./link_helper":9,"./mediator":10,"./mixin":11,"./model":12,"./model_factory":13,"./model_manager":14,"./views/base":15,"./views/collection":16,"./views/item":17}],9:[function(require,module,exports){
+},{"./app":1,"./collection":2,"./collection_factory":3,"./controller":4,"./dispatcher":5,"./fetcher":6,"./link_helper":8,"./mediator":9,"./mixin":10,"./model":11,"./model_factory":12,"./store":13,"./views/base":14,"./views/collection":15,"./views/item":16}],8:[function(require,module,exports){
 var mediator = require('./mediator'),
     LinkHelper;
 
@@ -559,10 +523,10 @@ LinkHelper.prototype.onClick = function(e) {
   }
 };
 
-},{"./mediator":10}],10:[function(require,module,exports){
+},{"./mediator":9}],9:[function(require,module,exports){
 module.exports = _.extend({}, Backbone.Events);
 
-},{}],11:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 module.exports = function() {
   var mixins = Array.prototype.slice.apply(arguments);
   _.each(mixins, function(mixinModule) {
@@ -586,8 +550,8 @@ module.exports = function() {
   return this;
 };
 
-},{}],12:[function(require,module,exports){
-var modelManager = require('./model_manager'),
+},{}],11:[function(require,module,exports){
+var store = require('./store'),
     mediator = require('./mediator'),
     mixin = require('./mixin'),
     namedParamRegex = /(\(\?)?:\w+/g,
@@ -601,7 +565,7 @@ module.exports = Model = Backbone.Model.extend({
     options || (options = {});
     this._nested = options.nested;
     this._resourceUrl = this.urlRoot;
-    this.urlRoot = this._url;
+    this.urlRoot = this._urlRoot;
     this.associated = _.extend({}, options.associated);
     this.expandFields = options.expandFields || this.expandFields;
     this.setFetched(!!options.fetched);
@@ -663,7 +627,7 @@ module.exports = Model = Backbone.Model.extend({
   },
 
   store: function(id) {
-    modelManager.set(id, this);
+    store.set(id, this);
   },
 
   reset: function(attrs, options) {
@@ -749,7 +713,7 @@ module.exports = Model = Backbone.Model.extend({
 // Add mixin method
 Model.mixin = mixin;
 
-},{"./mediator":10,"./mixin":11,"./model_manager":14}],13:[function(require,module,exports){
+},{"./mediator":9,"./mixin":10,"./store":13}],12:[function(require,module,exports){
 module.exports = function(type, attrs, options) {
   var modelsPath,
       Model;
@@ -767,51 +731,69 @@ module.exports = function(type, attrs, options) {
   return new Model(attrs, options);
 };
 
-},{}],14:[function(require,module,exports){
-var modelFactory = require('./model_factory');
+},{}],13:[function(require,module,exports){
+var modelFactory = require('./model_factory'),
+    collectionFactory = require('./collection_factory');
 
 module.exports = {
-  get: function(type, identifier, attrs, options) {
-    var id = type + ':',
-        model;
+  get: function(config) {
+    var id = config.resource + ':',
+        resource,
+        data;
 
-    if (_.isFunction(identifier)) {
-      id += identifier(attrs, options);
+    config.options || (config.options = {});
+    data = config.options.data;
+    delete config.options.data;
+
+    if (_.isFunction(config.id)) {
+      id += config.id(data, config.options);
     } else {
-      id += identifier;
+      id += config.id;
     }
-    model = Frame._appModels[id];
+    resource = Frame._store[id];
 
-    if (model && model._TTL <= Date.now()) {
-      model = null;
+    // check if resource is stale
+    if (resource && resource._TTL <= Date.now()) {
+      resource = null;
+      this.destroy(id);
     }
 
-    if (!model) {
-      model = modelFactory(type, attrs, options);
-      this.set(id, model);
+    if (!resource) {
+      try {
+        resource = modelFactory(config.resource, data, config.options);
+      } catch(e) {
+        try {
+          resource = collectionFactory(config.type, data, config.options);
+        } catch(e) {
+          throw new Error('Resource (' + config.resource + ') was not found as either model or collection');
+        }
+      }
+      this.set(id, resource);
     }
-    return model;
+
+    return resource;
   },
 
-  set: function(identifier, model) {
-    Frame._appModels[identifier] = model;
-    // 5 minute TTL
-    model._TTL = Date.now() + (model.cacheTTL || 60 * 5 * 1000);
-    model.on('change', this._updateTTL);
+  set: function(id, resource, TTL) {
+    Frame._store[id] = resource;
+
+    if (TTL) {
+      // Default to a 5 minute TTL
+      if (TTL === true) {
+        TTL = 60 * 5 * 1000;
+      }
+      resource._TTL = Date.now() + TTL;
+    }
   },
 
-  destroy: function(identifier) {
-    var model = Frame._appModels[identifier];
-    model.off('change', this._updateTTL);
-    delete Frame._appModels[identifier];
-  },
-
-  _updateTTL: function() {
-    this._TTL = Date.now() + (this.cacheTTL || 60 * 5 * 1000);
+  destroy: function(id) {
+    var exists = Frame._store[id];
+    delete Frame._store[id];
+    return exists;
   }
 };
 
-},{"./model_factory":13}],15:[function(require,module,exports){
+},{"./collection_factory":3,"./model_factory":12}],14:[function(require,module,exports){
 var mediator = require('../mediator'),
     mixin = require('../mixin'),
     viewOptions = ['template', 'skipDependencies'],
@@ -1116,7 +1098,7 @@ module.exports = View = Backbone.View.extend({
 // Add mixin method
 View.mixin = mixin;
 
-},{"../mediator":10,"../mixin":11}],16:[function(require,module,exports){
+},{"../mediator":9,"../mixin":10}],15:[function(require,module,exports){
 var View = require('./base'),
     collectionViewOptions = ['modelView', 'infinite', '$infiniteTarget'];
 
@@ -1248,7 +1230,7 @@ module.exports = View.extend({
   }
 });
 
-},{"./base":15}],17:[function(require,module,exports){
+},{"./base":14}],16:[function(require,module,exports){
 var View = require('./base');
 
 module.exports = View.extend({
@@ -1271,4 +1253,4 @@ module.exports = View.extend({
   onInvalid: function() {}
 });
 
-},{"./base":15}]},{},[8]);
+},{"./base":14}]},{},[7]);

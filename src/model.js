@@ -1,4 +1,4 @@
-var modelManager = require('./model_manager'),
+var store = require('./store'),
     mediator = require('./mediator'),
     mixin = require('./mixin'),
     namedParamRegex = /(\(\?)?:\w+/g,
@@ -12,7 +12,7 @@ module.exports = Model = Backbone.Model.extend({
     options || (options = {});
     this._nested = options.nested;
     this._resourceUrl = this.urlRoot;
-    this.urlRoot = this._url;
+    this.urlRoot = this._urlRoot;
     this.associated = _.extend({}, options.associated);
     this.expandFields = options.expandFields || this.expandFields;
     this.setFetched(!!options.fetched);
@@ -74,7 +74,7 @@ module.exports = Model = Backbone.Model.extend({
   },
 
   store: function(id) {
-    modelManager.set(id, this);
+    store.set(id, this);
   },
 
   reset: function(attrs, options) {

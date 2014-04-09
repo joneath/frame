@@ -1,16 +1,16 @@
-var modelManager = require('./model_manager'),
-    collectionManager = require('./collection_manager');
+var store = require('./store');
 
 module.exports = {
   fetch: function(config) {
-    var resource;
+    var resource, ajaxOptions;
 
-    if (config.model) {
-      resource = modelManager.get(config.model, config.id, config.data, config.options);
-    } else {
-      resource = collectionManager.get(config.collection, config.id, config.data, config.options);
+    if (config.options) {
+      ajaxOptions = config.options.ajax;
+      delete config.options.ajax;
     }
-    resource.fetchCached(config.fetchOptions);
+
+    resource = store.get(config);
+    resource.fetchCached(ajaxOptions);
 
     return resource;
   }
