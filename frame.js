@@ -7,14 +7,12 @@ module.exports = Backbone.Model.extend({
 
   initialize: function(config) {
     config && this.set(config);
+    config.templates && (Frame.TEMPLATES = config.templates);
     this.get('followLinks') && (this._linkHelper = new Frame.LinkHelper());
     this._dispatcher = new Frame.Dispatcher({
       routes: this.get('routes')
     });
 
-    if (config.templates) {
-      Frame.TEMPLATES = config.templates;
-    }
     Frame._app = this;
 
     // Allow app to get fully initialized before routes fire
@@ -818,7 +816,7 @@ module.exports = View = Backbone.View.extend({
     _.extend(this, _.pick(options, viewOptions));
     this.data = _.extend({}, this.data);
     options.data && this.set(options.data);
-    this.template && (this._template = Frame.TEMPLATES[this.template]);
+    this.template && (this.set('template', this.template));
     this.mediatorEvents && this._attachMediatorEvents();
     this.resourceEvents && this._attachResourceEventsGroup(this.resourceEvents);
     this.$el.on('remove', _.bind(this.remove, this));
@@ -876,6 +874,10 @@ module.exports = View = Backbone.View.extend({
   },
 
   set: function(key, val) {
+    if (key === 'template') {
+      this._template = Frame.TEMPLATES[val];
+      return;
+    }
     if (val === void 0) {
       _.merge(this.data, key);
     } else {
