@@ -24,7 +24,7 @@ module.exports = View.extend({
   },
 
   render: function() {
-    var templateHTML = this.template ? this.template() : '';
+    var templateHTML = this._template ? this._template() : '';
 
     this.hideEmpty();
     this.$el.html(templateHTML);

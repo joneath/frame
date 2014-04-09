@@ -1,16 +1,13 @@
 module.exports = Backbone.Model.extend({
   defaults: {
     followLinks: true,
-    routes: {}
+    routes: {},
+    TEMPLATES: JST
   },
 
   initialize: function(config) {
     config && this.set(config);
-
-    if (this.get('followLinks')) {
-      this._linkHelper = new Frame.LinkHelper();
-    }
-
+    this.get('followLinks') && (this._linkHelper = new Frame.LinkHelper());
     this._dispatcher = new Frame.Dispatcher({
       routes: this.get('routes')
     });

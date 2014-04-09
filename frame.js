@@ -2,16 +2,13 @@
 module.exports = Backbone.Model.extend({
   defaults: {
     followLinks: true,
-    routes: {}
+    routes: {},
+    TEMPLATES: JST
   },
 
   initialize: function(config) {
     config && this.set(config);
-
-    if (this.get('followLinks')) {
-      this._linkHelper = new Frame.LinkHelper();
-    }
-
+    this.get('followLinks') && (this._linkHelper = new Frame.LinkHelper());
     this._dispatcher = new Frame.Dispatcher({
       routes: this.get('routes')
     });
@@ -819,6 +816,7 @@ module.exports = View = Backbone.View.extend({
     _.extend(this, _.pick(options, viewOptions));
     this.data = _.extend({}, this.data);
     options.data && this.set(options.data);
+    this.template && (this._template = Frame.TEMPLATES[this.template]);
     this.mediatorEvents && this._attachMediatorEvents();
     this.resourceEvents && this._attachResourceEventsGroup(this.resourceEvents);
     this.$el.on('remove', _.bind(this.remove, this));
@@ -845,7 +843,7 @@ module.exports = View = Backbone.View.extend({
     if (this.fetching) {
       return this;
     }
-    if (this.template) {
+    if (this._template) {
       _.each(this.resources, function(resource, resourceName) {
         if (resource) {
           if (resource.models) { // Collection
@@ -862,7 +860,7 @@ module.exports = View = Backbone.View.extend({
         templateData[key] = this.get(key);
       }, this);
       _.extend(data, templateData);
-      this.$el.html(this.template(data));
+      this.$el.html(this._template(data));
     }
     this._rendered = true;
     this.afterRender(this.resources);
@@ -1120,7 +1118,7 @@ module.exports = View.extend({
   },
 
   render: function() {
-    var templateHTML = this.template ? this.template() : '';
+    var templateHTML = this._template ? this._template() : '';
 
     this.hideEmpty();
     this.$el.html(templateHTML);
