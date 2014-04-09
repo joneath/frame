@@ -2,8 +2,7 @@
 module.exports = Backbone.Model.extend({
   defaults: {
     followLinks: true,
-    routes: {},
-    TEMPLATES: JST
+    routes: {}
   },
 
   initialize: function(config) {
@@ -13,6 +12,9 @@ module.exports = Backbone.Model.extend({
       routes: this.get('routes')
     });
 
+    if (config.templates) {
+      Frame.TEMPLATES = config.templates;
+    }
     Frame._app = this;
 
     // Allow app to get fully initialized before routes fire
