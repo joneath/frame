@@ -76,6 +76,7 @@ _.extend(Controller.prototype, Backbone.Events, {
             i = 1,
             fetchParams,
             resourceId,
+            resourceName,
             id;
 
         _.each(args, function(arg) {
@@ -87,7 +88,9 @@ _.extend(Controller.prototype, Backbone.Events, {
           id = args[args.length - 1];
         }
         _.each(storedResources, function(config) {
-          resourceId = _.uniqueId(config.name);
+          // Convert camel case to underscores
+          resourceName = config.name.replace(/([A-Z])/g, function($1){return '_' + $1.toLowerCase();});
+          resourceId = _.uniqueId(resourceName);
           fetchParams = null;
           if (config.id) {
             if (_.isFunction(config.id)) {
@@ -105,13 +108,13 @@ _.extend(Controller.prototype, Backbone.Events, {
           }
           var resource = this.fetcher.fetch({
             id: resourceId,
-            resource: config.name,
+            resource: resourceName,
+            data: id ? {id: id} : null,
             options: {
               nested: args,
-              data: {id: id},
-              ajax: {
+              ajax: fetchParams ? {
                 data: fetchParams
-              }
+              } : null
             }
           });
           config.wait && promises.push(resource.promise);

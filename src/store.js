@@ -4,15 +4,12 @@ var modelFactory = require('./model_factory'),
 module.exports = {
   get: function(config) {
     var id = config.resource + ':',
-        resource,
-        data;
+        resource;
 
     config.options || (config.options = {});
-    data = config.options.data;
-    delete config.options.data;
 
     if (_.isFunction(config.id)) {
-      id += config.id(data, config.options);
+      id += config.id(config.data, config.options);
     } else {
       id += config.id;
     }
@@ -26,10 +23,10 @@ module.exports = {
 
     if (!resource) {
       try {
-        resource = modelFactory(config.resource, data, config.options);
+        resource = modelFactory(config.resource, config.data, config.options);
       } catch(e) {
         try {
-          resource = collectionFactory(config.type, data, config.options);
+          resource = collectionFactory(config.resource, null, config.options);
         } catch(e) {
           throw new Error('Resource (' + config.resource + ') was not found as either model or collection');
         }

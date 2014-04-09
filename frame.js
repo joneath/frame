@@ -242,6 +242,7 @@ _.extend(Controller.prototype, Backbone.Events, {
             i = 1,
             fetchParams,
             resourceId,
+            resourceName,
             id;
 
         _.each(args, function(arg) {
@@ -253,7 +254,9 @@ _.extend(Controller.prototype, Backbone.Events, {
           id = args[args.length - 1];
         }
         _.each(storedResources, function(config) {
-          resourceId = _.uniqueId(config.name);
+          // Convert camel case to underscores
+          resourceName = config.name.replace(/([A-Z])/g, function($1){return '_' + $1.toLowerCase();});
+          resourceId = _.uniqueId(resourceName);
           fetchParams = null;
           if (config.id) {
             if (_.isFunction(config.id)) {
@@ -271,13 +274,13 @@ _.extend(Controller.prototype, Backbone.Events, {
           }
           var resource = this.fetcher.fetch({
             id: resourceId,
-            resource: config.name,
+            resource: resourceName,
+            data: id ? {id: id} : null,
             options: {
               nested: args,
-              data: {id: id},
-              ajax: {
+              ajax: fetchParams ? {
                 data: fetchParams
-              }
+              } : null
             }
           });
           config.wait && promises.push(resource.promise);
@@ -738,15 +741,12 @@ var modelFactory = require('./model_factory'),
 module.exports = {
   get: function(config) {
     var id = config.resource + ':',
-        resource,
-        data;
+        resource;
 
     config.options || (config.options = {});
-    data = config.options.data;
-    delete config.options.data;
 
     if (_.isFunction(config.id)) {
-      id += config.id(data, config.options);
+      id += config.id(config.data, config.options);
     } else {
       id += config.id;
     }
@@ -760,10 +760,10 @@ module.exports = {
 
     if (!resource) {
       try {
-        resource = modelFactory(config.resource, data, config.options);
+        resource = modelFactory(config.resource, config.data, config.options);
       } catch(e) {
         try {
-          resource = collectionFactory(config.type, data, config.options);
+          resource = collectionFactory(config.resource, null, config.options);
         } catch(e) {
           throw new Error('Resource (' + config.resource + ') was not found as either model or collection');
         }
