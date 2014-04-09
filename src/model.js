@@ -1,6 +1,7 @@
 var modelManager = require('./model_manager'),
     mediator = require('./mediator'),
     mixin = require('./mixin'),
+    namedParamRegex = /(\(\?)?:\w+/g,
     Model;
 
 module.exports = Model = Backbone.Model.extend({
@@ -9,6 +10,9 @@ module.exports = Model = Backbone.Model.extend({
   initialize: function(attrs, options) {
     var Resource, nestedResource, fieldName, data;
     options || (options = {});
+    this._nested = options.nested;
+    this._resourceUrl = this.urlRoot;
+    this.urlRoot = this._url;
     this.associated = _.extend({}, options.associated);
     this.expandFields = options.expandFields || this.expandFields;
     this.setFetched(!!options.fetched);
@@ -40,6 +44,23 @@ module.exports = Model = Backbone.Model.extend({
   },
 
   init: function() {},
+
+  _urlRoot: function() {
+    var url = _.result(this, '_resourceUrl'),
+        i = 0;
+
+    if (!url) {
+      throw 'url is required to fetch resource';
+    }
+    // Replace placeholder url fragments
+    url = url.replace(namedParamRegex, function(val) {
+      val = this._nested[i];
+      i += 1;
+      return val;
+    }.bind(this));
+
+    return url;
+  },
 
   _watchNested: function(fieldName, resource) {
     var boundUpdate = _.bind(this._updateNested, this, fieldName, resource);
