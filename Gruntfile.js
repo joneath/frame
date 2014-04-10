@@ -20,6 +20,11 @@ module.exports = function (grunt) {
       dist: {
         files: {
           'frame.js': ['src/frame.js']
+        },
+        options: {
+          bundleOptions: {
+            standalone: 'Frame'
+          }
         }
       }
     },

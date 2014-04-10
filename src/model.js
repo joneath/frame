@@ -11,11 +11,13 @@ module.exports = Model = Backbone.Model.extend({
     var Resource, nestedResource, fieldName, data;
     options || (options = {});
     this._nested = options.nested;
-    this._resourceUrl = this.urlRoot;
-    this.urlRoot = this._urlRoot;
     this.associated = _.extend({}, options.associated);
     this.expandFields = options.expandFields || this.expandFields;
     this.setFetched(!!options.fetched);
+    if (this.urlRoot) {
+      this._resourceUrl = this.urlRoot;
+      this.urlRoot = this._urlRoot;
+    }
 
     if (this.expandFields) {
       _.each(this.expandFields, function(expandConfig) {

@@ -1,4 +1,4 @@
-(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+!function(e){if("object"==typeof exports)module.exports=e();else if("function"==typeof define&&define.amd)define(e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.Frame=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
 module.exports = Backbone.Model.extend({
   defaults: {
     followLinks: true,
@@ -24,11 +24,11 @@ module.exports = Backbone.Model.extend({
   }
 });
 
-},{}],2:[function(require,module,exports){
-var Model = require('./model'),
-    store = require('./store'),
-    mediator = require('./mediator'),
-    mixin = require('./mixin'),
+},{}],2:[function(_dereq_,module,exports){
+var Model = _dereq_('./model'),
+    store = _dereq_('./store'),
+    mediator = _dereq_('./mediator'),
+    mixin = _dereq_('./mixin'),
     namedParamRegex = /(\(\?)?:\w+/g,
     Collection;
 
@@ -145,7 +145,7 @@ module.exports = Collection = Backbone.Collection.extend({
 // Add mixin method
 Collection.mixin = mixin;
 
-},{"./mediator":9,"./mixin":10,"./model":11,"./store":13}],3:[function(require,module,exports){
+},{"./mediator":9,"./mixin":10,"./model":11,"./store":13}],3:[function(_dereq_,module,exports){
 module.exports = function(type, models, options) {
   var collectionsPath,
       Collection;
@@ -155,7 +155,7 @@ module.exports = function(type, models, options) {
   }
 
   collectionsPath = 'collections/' + type;
-  Collection = require(collectionsPath);
+  Collection = _dereq_(collectionsPath);
 
   if (!Collection) {
     throw collectionsPath + ' is an undefined collection';
@@ -163,11 +163,11 @@ module.exports = function(type, models, options) {
   return new Collection(models, options);
 };
 
-},{}],4:[function(require,module,exports){
-var store = require('./store'),
-    fetcher = require('./fetcher'),
-    mediator = require('./mediator'),
-    mixin = require('./mixin'),
+},{}],4:[function(_dereq_,module,exports){
+var store = _dereq_('./store'),
+    fetcher = _dereq_('./fetcher'),
+    mediator = _dereq_('./mediator'),
+    mixin = _dereq_('./mixin'),
     controllerOptions = ['bodyClass', 'el'],
     Controller;
 
@@ -255,7 +255,7 @@ _.extend(Controller.prototype, Backbone.Events, {
         }
         _.each(storedResources, function(config) {
           // Convert camel case to underscores
-          resourceName = config.name.replace(/([A-Z])/g, function($1){return '_' + $1.toLowerCase();});
+          resourceName = config.resource || config.name.replace(/([A-Z])/g, function($1){return '_' + $1.toLowerCase();});
           resourceId = _.uniqueId(resourceName);
           fetchParams = null;
           if (config.id) {
@@ -333,8 +333,8 @@ _.extend(Controller.prototype, Backbone.Events, {
 Controller.extend = Backbone.Model.extend;
 Controller.mixin = mixin;
 
-},{"./fetcher":6,"./mediator":9,"./mixin":10,"./store":13}],5:[function(require,module,exports){
-var mediator = require('./mediator'),
+},{"./fetcher":6,"./mediator":9,"./mixin":10,"./store":13}],5:[function(_dereq_,module,exports){
+var mediator = _dereq_('./mediator'),
     dispatcherOptions = ['routes', 'controllerPath', 'middlewarePath'],
     Dispatcher;
 
@@ -371,7 +371,7 @@ _.extend(Dispatcher.prototype, Backbone.Events, {
 
   loadMiddlewares: function(middlewares) {
     return _.map(middlewares, function(name) {
-      return require(this.middlewarePath + name);
+      return _dereq_(this.middlewarePath + name);
     }, this);
   },
 
@@ -411,7 +411,7 @@ _.extend(Dispatcher.prototype, Backbone.Events, {
     var controllerPairStr = controllerPair.split('#'),
         controllerName = controllerPairStr[0],
         action = controllerPairStr[1],
-        Controller = require(this.controllerPath + controllerName),
+        Controller = _dereq_(this.controllerPath + controllerName),
         method = '';
 
     if (middlewares && middlewares.length) {
@@ -442,8 +442,8 @@ _.extend(Dispatcher.prototype, Backbone.Events, {
 // Use Backbone's extend inheritance
 Dispatcher.extend = Backbone.Model.extend;
 
-},{"./mediator":9}],6:[function(require,module,exports){
-var store = require('./store');
+},{"./mediator":9}],6:[function(_dereq_,module,exports){
+var store = _dereq_('./store');
 
 module.exports = {
   fetch: function(config) {
@@ -461,7 +461,7 @@ module.exports = {
   }
 };
 
-},{"./store":13}],7:[function(require,module,exports){
+},{"./store":13}],7:[function(_dereq_,module,exports){
 (function(factory) {
   // Set up Frame appropriately for the environment. Start with AMD.
   if (typeof define === 'function' && define.amd) {
@@ -477,28 +477,28 @@ module.exports = {
 }(function(root, Frame, Backbone, _, $) {
   _.extend(Frame, {
     _store: {},
-    App: require('./app'),
-    mediator: require('./mediator'),
-    mixin: require('./mixin'),
-    LinkHelper: require('./link_helper'),
-    modelFactory: require('./model_factory'),
-    collectionFactory: require('./collection_factory'),
-    store: require('./store'),
-    fetcher: require('./fetcher'),
-    Model: require('./model'),
-    Collection: require('./collection'),
-    Controller: require('./controller'),
-    Dispatcher: require('./dispatcher'),
-    View: require('./views/base'),
-    CollectionView: require('./views/collection'),
-    ItemView: require('./views/item')
+    App: _dereq_('./app'),
+    mediator: _dereq_('./mediator'),
+    mixin: _dereq_('./mixin'),
+    LinkHelper: _dereq_('./link_helper'),
+    modelFactory: _dereq_('./model_factory'),
+    collectionFactory: _dereq_('./collection_factory'),
+    store: _dereq_('./store'),
+    fetcher: _dereq_('./fetcher'),
+    Model: _dereq_('./model'),
+    Collection: _dereq_('./collection'),
+    Controller: _dereq_('./controller'),
+    Dispatcher: _dereq_('./dispatcher'),
+    View: _dereq_('./views/base'),
+    CollectionView: _dereq_('./views/collection'),
+    ItemView: _dereq_('./views/item')
   });
 
   return Frame;
 }));
 
-},{"./app":1,"./collection":2,"./collection_factory":3,"./controller":4,"./dispatcher":5,"./fetcher":6,"./link_helper":8,"./mediator":9,"./mixin":10,"./model":11,"./model_factory":12,"./store":13,"./views/base":14,"./views/collection":15,"./views/item":16}],8:[function(require,module,exports){
-var mediator = require('./mediator'),
+},{"./app":1,"./collection":2,"./collection_factory":3,"./controller":4,"./dispatcher":5,"./fetcher":6,"./link_helper":8,"./mediator":9,"./mixin":10,"./model":11,"./model_factory":12,"./store":13,"./views/base":14,"./views/collection":15,"./views/item":16}],8:[function(_dereq_,module,exports){
+var mediator = _dereq_('./mediator'),
     LinkHelper;
 
 module.exports = LinkHelper = function() {
@@ -526,15 +526,15 @@ LinkHelper.prototype.onClick = function(e) {
   }
 };
 
-},{"./mediator":9}],9:[function(require,module,exports){
+},{"./mediator":9}],9:[function(_dereq_,module,exports){
 module.exports = _.extend({}, Backbone.Events);
 
-},{}],10:[function(require,module,exports){
+},{}],10:[function(_dereq_,module,exports){
 module.exports = function() {
   var mixins = Array.prototype.slice.apply(arguments);
   _.each(mixins, function(mixinModule) {
     if (_.isString(mixinModule)) {
-      mixinModule = require('mixins/' + mixinModule);
+      mixinModule = _dereq_('mixins/' + mixinModule);
     }
     if (this.prototype.events && mixinModule.events) {
       _.merge(this.prototype.events, mixinModule.events);
@@ -553,10 +553,10 @@ module.exports = function() {
   return this;
 };
 
-},{}],11:[function(require,module,exports){
-var store = require('./store'),
-    mediator = require('./mediator'),
-    mixin = require('./mixin'),
+},{}],11:[function(_dereq_,module,exports){
+var store = _dereq_('./store'),
+    mediator = _dereq_('./mediator'),
+    mixin = _dereq_('./mixin'),
     namedParamRegex = /(\(\?)?:\w+/g,
     Model;
 
@@ -567,11 +567,13 @@ module.exports = Model = Backbone.Model.extend({
     var Resource, nestedResource, fieldName, data;
     options || (options = {});
     this._nested = options.nested;
-    this._resourceUrl = this.urlRoot;
-    this.urlRoot = this._urlRoot;
     this.associated = _.extend({}, options.associated);
     this.expandFields = options.expandFields || this.expandFields;
     this.setFetched(!!options.fetched);
+    if (this.urlRoot) {
+      this._resourceUrl = this.urlRoot;
+      this.urlRoot = this._urlRoot;
+    }
 
     if (this.expandFields) {
       _.each(this.expandFields, function(expandConfig) {
@@ -588,7 +590,7 @@ module.exports = Model = Backbone.Model.extend({
           }
           expandConfig.push('base');
         }
-        Resource = require(expandConfig[1] + '/' + expandConfig[2]);
+        Resource = _dereq_(expandConfig[1] + '/' + expandConfig[2]);
         nestedResource = new Resource(data);
         this._watchNested(fieldName, nestedResource);
         this.associated[fieldName] = nestedResource;
@@ -716,7 +718,7 @@ module.exports = Model = Backbone.Model.extend({
 // Add mixin method
 Model.mixin = mixin;
 
-},{"./mediator":9,"./mixin":10,"./store":13}],12:[function(require,module,exports){
+},{"./mediator":9,"./mixin":10,"./store":13}],12:[function(_dereq_,module,exports){
 module.exports = function(type, attrs, options) {
   var modelsPath,
       Model;
@@ -726,7 +728,7 @@ module.exports = function(type, attrs, options) {
   }
 
   modelsPath = 'models/' + type;
-  Model = require(modelsPath);
+  Model = _dereq_(modelsPath);
 
   if (!Model) {
     throw modelsPath + ' is an undefined model';
@@ -734,9 +736,9 @@ module.exports = function(type, attrs, options) {
   return new Model(attrs, options);
 };
 
-},{}],13:[function(require,module,exports){
-var modelFactory = require('./model_factory'),
-    collectionFactory = require('./collection_factory');
+},{}],13:[function(_dereq_,module,exports){
+var modelFactory = _dereq_('./model_factory'),
+    collectionFactory = _dereq_('./collection_factory');
 
 module.exports = {
   get: function(config) {
@@ -793,9 +795,9 @@ module.exports = {
   }
 };
 
-},{"./collection_factory":3,"./model_factory":12}],14:[function(require,module,exports){
-var mediator = require('../mediator'),
-    mixin = require('../mixin'),
+},{"./collection_factory":3,"./model_factory":12}],14:[function(_dereq_,module,exports){
+var mediator = _dereq_('../mediator'),
+    mixin = _dereq_('../mixin'),
     viewOptions = ['template', 'skipDependencies'],
     View;
 
@@ -1098,8 +1100,8 @@ module.exports = View = Backbone.View.extend({
 // Add mixin method
 View.mixin = mixin;
 
-},{"../mediator":9,"../mixin":10}],15:[function(require,module,exports){
-var View = require('./base'),
+},{"../mediator":9,"../mixin":10}],15:[function(_dereq_,module,exports){
+var View = _dereq_('./base'),
     collectionViewOptions = ['modelView', 'infinite', '$infiniteTarget'];
 
 function noOp() {}
@@ -1230,8 +1232,8 @@ module.exports = View.extend({
   }
 });
 
-},{"./base":14}],16:[function(require,module,exports){
-var View = require('./base');
+},{"./base":14}],16:[function(_dereq_,module,exports){
+var View = _dereq_('./base');
 
 module.exports = View.extend({
   modelEvents: {
@@ -1253,4 +1255,6 @@ module.exports = View.extend({
   onInvalid: function() {}
 });
 
-},{"./base":14}]},{},[7]);
+},{"./base":14}]},{},[7])
+(7)
+});;

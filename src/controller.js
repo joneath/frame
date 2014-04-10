@@ -89,7 +89,7 @@ _.extend(Controller.prototype, Backbone.Events, {
         }
         _.each(storedResources, function(config) {
           // Convert camel case to underscores
-          resourceName = config.name.replace(/([A-Z])/g, function($1){return '_' + $1.toLowerCase();});
+          resourceName = config.resource || config.name.replace(/([A-Z])/g, function($1){return '_' + $1.toLowerCase();});
           resourceId = _.uniqueId(resourceName);
           fetchParams = null;
           if (config.id) {
