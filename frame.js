@@ -462,40 +462,24 @@ module.exports = {
 };
 
 },{"./store":13}],7:[function(_dereq_,module,exports){
-(function(factory) {
-  // Set up Frame appropriately for the environment. Start with AMD.
-  if (typeof define === 'function' && define.amd) {
-    define(['backbone', 'underscore', 'jquery', 'exports'], function(Backbone, _, $, exports) {
-      // Export global even in AMD case in case this script is loaded with
-      // others that may still expect a global Backbone.
-      window.Frame = factory(window, exports, Backbone, _, $);
-    });
-  } else {
-    window.Frame = factory(window, {}, this.Backbone, this._, (this.jQuery || this.Zepto || this.ender || this.$));
-  }
-
-}(function(root, Frame, Backbone, _, $) {
-  _.extend(Frame, {
-    _store: {},
-    App: _dereq_('./app'),
-    mediator: _dereq_('./mediator'),
-    mixin: _dereq_('./mixin'),
-    LinkHelper: _dereq_('./link_helper'),
-    modelFactory: _dereq_('./model_factory'),
-    collectionFactory: _dereq_('./collection_factory'),
-    store: _dereq_('./store'),
-    fetcher: _dereq_('./fetcher'),
-    Model: _dereq_('./model'),
-    Collection: _dereq_('./collection'),
-    Controller: _dereq_('./controller'),
-    Dispatcher: _dereq_('./dispatcher'),
-    View: _dereq_('./views/base'),
-    CollectionView: _dereq_('./views/collection'),
-    ItemView: _dereq_('./views/item')
-  });
-
-  return Frame;
-}));
+module.exports = {
+  _store: {},
+  App: _dereq_('./app'),
+  mediator: _dereq_('./mediator'),
+  mixin: _dereq_('./mixin'),
+  LinkHelper: _dereq_('./link_helper'),
+  modelFactory: _dereq_('./model_factory'),
+  collectionFactory: _dereq_('./collection_factory'),
+  store: _dereq_('./store'),
+  fetcher: _dereq_('./fetcher'),
+  Model: _dereq_('./model'),
+  Collection: _dereq_('./collection'),
+  Controller: _dereq_('./controller'),
+  Dispatcher: _dereq_('./dispatcher'),
+  View: _dereq_('./views/base'),
+  CollectionView: _dereq_('./views/collection'),
+  ItemView: _dereq_('./views/item')
+};
 
 },{"./app":1,"./collection":2,"./collection_factory":3,"./controller":4,"./dispatcher":5,"./fetcher":6,"./link_helper":8,"./mediator":9,"./mixin":10,"./model":11,"./model_factory":12,"./store":13,"./views/base":14,"./views/collection":15,"./views/item":16}],8:[function(_dereq_,module,exports){
 var mediator = _dereq_('./mediator'),
