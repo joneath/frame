@@ -462,8 +462,6 @@ module.exports = {
 };
 
 },{"./store":13}],7:[function(_dereq_,module,exports){
-_dereq_('backbone');
-
 module.exports = window.Frame = {
   _store: {},
   App: _dereq_('./app'),
