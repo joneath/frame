@@ -1,5 +1,4 @@
-var Backbone = require('backbone'),
-    mediator = require('./mediator'),
+var mediator = require('./mediator'),
     dispatcherOptions = ['routes', 'controllerPath', 'middlewarePath'],
     Dispatcher;
 

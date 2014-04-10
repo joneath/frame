@@ -22,7 +22,6 @@ module.exports = function (grunt) {
           'frame.js': ['src/frame.js']
         },
         options: {
-          external: ['backbone'],
           bundleOptions: {
             standalone: 'Frame'
           }

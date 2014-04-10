@@ -1,5 +1,4 @@
-var Backbone = require('backbone'),
-    Model = require('./model'),
+var Model = require('./model'),
     store = require('./store'),
     mediator = require('./mediator'),
     mixin = require('./mixin'),

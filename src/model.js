@@ -1,5 +1,4 @@
-var Backbone = require('backbone'),
-    store = require('./store'),
+var store = require('./store'),
     mediator = require('./mediator'),
     mixin = require('./mixin'),
     namedParamRegex = /(\(\?)?:\w+/g,
