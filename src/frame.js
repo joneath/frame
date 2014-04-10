@@ -1,3 +1,5 @@
+require('backbone');
+
 module.exports = window.Frame = {
   _store: {},
   App: require('./app'),
