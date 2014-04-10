@@ -462,7 +462,7 @@ module.exports = {
 };
 
 },{"./store":13}],7:[function(_dereq_,module,exports){
-module.exports = {
+module.exports = window.Frame = {
   _store: {},
   App: _dereq_('./app'),
   mediator: _dereq_('./mediator'),

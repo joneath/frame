@@ -1,4 +1,4 @@
-module.exports = {
+module.exports = window.Frame = {
   _store: {},
   App: require('./app'),
   mediator: require('./mediator'),
