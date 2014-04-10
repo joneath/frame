@@ -55,11 +55,13 @@ module.exports = Model = Backbone.Model.extend({
       throw 'url is required to fetch resource';
     }
     // Replace placeholder url fragments
-    url = url.replace(namedParamRegex, function(val) {
-      val = this._nested[i];
-      i += 1;
-      return val;
-    }.bind(this));
+    if (this._nested.length) {
+      url = url.replace(namedParamRegex, function(val) {
+        val = this._nested[i];
+        i += 1;
+        return val;
+      }.bind(this));
+    }
 
     return url;
   },
