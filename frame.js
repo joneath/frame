@@ -1,4 +1,6 @@
 !function(e){if("object"==typeof exports)module.exports=e();else if("function"==typeof define&&define.amd)define(e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.Frame=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
+var Backbone = _dereq_('backbone');
+
 module.exports = Backbone.Model.extend({
   defaults: {
     followLinks: true,
@@ -25,7 +27,8 @@ module.exports = Backbone.Model.extend({
 });
 
 },{}],2:[function(_dereq_,module,exports){
-var Model = _dereq_('./model'),
+var Backbone = _dereq_('backbone'),
+    Model = _dereq_('./model'),
     store = _dereq_('./store'),
     mediator = _dereq_('./mediator'),
     mixin = _dereq_('./mixin'),
@@ -164,7 +167,8 @@ module.exports = function(type, models, options) {
 };
 
 },{}],4:[function(_dereq_,module,exports){
-var store = _dereq_('./store'),
+var Backbone = _dereq_('backbone'),
+    store = _dereq_('./store'),
     fetcher = _dereq_('./fetcher'),
     mediator = _dereq_('./mediator'),
     mixin = _dereq_('./mixin'),
@@ -334,7 +338,8 @@ Controller.extend = Backbone.Model.extend;
 Controller.mixin = mixin;
 
 },{"./fetcher":6,"./mediator":9,"./mixin":10,"./store":13}],5:[function(_dereq_,module,exports){
-var mediator = _dereq_('./mediator'),
+var Backbone = _dereq_('backbone'),
+    mediator = _dereq_('./mediator'),
     dispatcherOptions = ['routes', 'controllerPath', 'middlewarePath'],
     Dispatcher;
 
@@ -511,6 +516,7 @@ LinkHelper.prototype.onClick = function(e) {
 };
 
 },{"./mediator":9}],9:[function(_dereq_,module,exports){
+var Backbone = _dereq_('backbone');
 module.exports = _.extend({}, Backbone.Events);
 
 },{}],10:[function(_dereq_,module,exports){
@@ -538,7 +544,8 @@ module.exports = function() {
 };
 
 },{}],11:[function(_dereq_,module,exports){
-var store = _dereq_('./store'),
+var Backbone = _dereq_('backbone'),
+    store = _dereq_('./store'),
     mediator = _dereq_('./mediator'),
     mixin = _dereq_('./mixin'),
     namedParamRegex = /(\(\?)?:\w+/g,
@@ -782,7 +789,8 @@ module.exports = {
 };
 
 },{"./collection_factory":3,"./model_factory":12}],14:[function(_dereq_,module,exports){
-var mediator = _dereq_('../mediator'),
+var Backbone = _dereq_('backbone'),
+    mediator = _dereq_('../mediator'),
     mixin = _dereq_('../mixin'),
     viewOptions = ['template', 'skipDependencies'],
     View;

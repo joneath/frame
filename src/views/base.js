@@ -1,4 +1,5 @@
-var mediator = require('../mediator'),
+var Backbone = require('backbone'),
+    mediator = require('../mediator'),
     mixin = require('../mixin'),
     viewOptions = ['template', 'skipDependencies'],
     View;
