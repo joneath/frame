@@ -16,18 +16,18 @@ module.exports = function (grunt) {
         'test/spec/{,*/}*.js'
       ]
     },
-    browserify: {
-      dist: {
-        files: {
-          'frame.js': ['src/frame.js']
-        },
-        options: {
-          bundleOptions: {
-            standalone: 'Frame'
-          }
-        }
-      }
-    },
+    // browserify: {
+    //   dist: {
+    //     files: {
+    //       'frame.js': ['src/frame.js']
+    //     },
+    //     options: {
+    //       bundleOptions: {
+    //         standalone: 'Frame'
+    //       }
+    //     }
+    //   }
+    // },
     uglify: {
       build: {
         files: {
@@ -38,7 +38,6 @@ module.exports = function (grunt) {
   });
 
   grunt.registerTask('build', [
-    'browserify',
     'uglify'
   ]);
 

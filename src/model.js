@@ -11,35 +11,13 @@ module.exports = Model = Backbone.Model.extend({
     var Resource, nestedResource, fieldName, data;
     options || (options = {});
     this._nested = options.nested;
-    this.associated = _.extend({}, options.associated);
+    this.associated || (this.associated = {});
     this.expandFields = options.expandFields || this.expandFields;
-    this.setFetched(!!options.fetched);
     if (this.urlRoot) {
       this._resourceUrl = this.urlRoot;
       this.urlRoot = this._urlRoot;
     }
-
-    if (this.expandFields) {
-      _.each(this.expandFields, function(expandConfig) {
-        // Blow up field string to find field name, model/collection name
-        expandConfig = expandConfig.split('>');
-        fieldName = expandConfig[0];
-        data = this.get(fieldName);
-        // Support implicit expand config - no collection/model specified
-        if (expandConfig.length == 1) {
-          if (data.length) {
-            expandConfig.push('collections');
-          } else {
-            expandConfig.push('models');
-          }
-          expandConfig.push('base');
-        }
-        Resource = require(expandConfig[1] + '/' + expandConfig[2]);
-        nestedResource = new Resource(data);
-        this._watchNested(fieldName, nestedResource);
-        this.associated[fieldName] = nestedResource;
-      }, this);
-    }
+    this.setFetched(!!options.fetched);
     this.init.apply(this, arguments);
 
     return this;
@@ -75,6 +53,35 @@ module.exports = Model = Backbone.Model.extend({
 
   _updateNested: function(fieldName, resource) {
     this.set(fieldName, resource.toJSON());
+  },
+
+  parse: function(raw) {
+    var Resource, nestedResource, fieldName, data;
+    if (this.expandFields) {
+      this.associated = {};
+      _.each(this.expandFields, function(expandConfig) {
+        // Blow up field string to find field name, model/collection name
+        expandConfig = expandConfig.split('>');
+        fieldName = expandConfig[0];
+        data = raw[fieldName];
+        if (!data) return;
+        // Support implicit expand config - no collection/model specified
+        if (expandConfig.length == 1) {
+          if (data.length) {
+            expandConfig.push('collections');
+          } else {
+            expandConfig.push('models');
+          }
+          expandConfig.push('base');
+        }
+        Resource = require(expandConfig[1] + '/' + expandConfig[2]);
+        nestedResource = new Resource(data);
+        this._watchNested(fieldName, nestedResource);
+        this.associated[fieldName] = nestedResource;
+      }, this);
+    }
+
+    return raw;
   },
 
   store: function(id) {

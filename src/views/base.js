@@ -6,6 +6,7 @@ var mediator = require('../mediator'),
 function noOp() {}
 
 module.exports = View = Backbone.View.extend({
+  waitForResources: true,
   init: noOp,
   afterRender: noOp,
   onRemove: noOp,
@@ -28,16 +29,9 @@ module.exports = View = Backbone.View.extend({
     this.resourceEvents && this._attachResourceEventsGroup(this.resourceEvents);
     this.$el.on('remove', _.bind(this.remove, this));
 
-    var promises = [];
-    function collectPendingPromise(resource) {
-      if (resource && resource.promise && resource.promise.state() === 'pending') {
-        promises.push(resource.promise);
-      }
-    }
-    if (!this.skipDependencies) {
-      _.each(this.resources, collectPendingPromise);
-      this.model && collectPendingPromise(this.model);
-      this.collection && collectPendingPromise(this.collection);
+    var promises;
+    if (this.waitForResources) {
+      promises = this.collectResourcesPromises();
       promises.length && this.whenFetching(promises);
     }
 
@@ -197,6 +191,20 @@ module.exports = View = Backbone.View.extend({
   stopPropagation: function(e) {
     e && e.stopPropagation && e.stopPropagation();
     return this;
+  },
+
+  collectResourcesPromises: function() {
+    var promises = [];
+    function collectPendingPromise(resource) {
+      if (resource && resource.promise && resource.promise.state() === 'pending') {
+        promises.push(resource.promise);
+      }
+    }
+    _.each(this.resources, collectPendingPromise);
+    this.model && collectPendingPromise(this.model);
+    this.collection && collectPendingPromise(this.collection);
+
+    return promises;
   },
 
   whenFetching: function(promises) {

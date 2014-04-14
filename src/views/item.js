@@ -7,14 +7,16 @@ module.exports = View.extend({
     'remove': 'removeItem'
   },
 
-  initialize: function(options) {
+  initialize: function() {
     this.model && this._attachResourceEvents(this.modelEvents, this.model);
-    View.prototype.initialize.apply(this, arguments);
     this.collection = this.model.collection;
+    View.prototype.initialize.apply(this, arguments);
   },
 
   removeItem: function(model, collection, options) {
-    !options.silent && this.remove();
+    if (!options || !options.silent) {
+      this.remove();
+    }
   },
 
   onInvalid: function() {}

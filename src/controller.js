@@ -120,9 +120,20 @@ _.extend(Controller.prototype, Backbone.Events, {
           config.wait && promises.push(resource.promise);
           data[config.name] = resource;
         }, this);
-        $.when.apply($, promises).always(function() {
-          action.call(this, data, args);
-        }.bind(this));
+        promises.length && this.onLoading.call(this, promises);
+        $.when.apply($, promises)
+        .always(function() {
+          // Clear controller of loading
+          this.$el.empty();
+        }.bind(this))
+        .then(
+          function() {
+            action.call(this, data, args);
+          }.bind(this),
+          function() {
+            this.onError.apply(this, arguments);
+          }.bind(this)
+        );
       } else {
         action.apply(this, args);
       }
@@ -161,7 +172,10 @@ _.extend(Controller.prototype, Backbone.Events, {
     _.invoke(this.views, 'remove');
     this.$el.empty();
     this.views = [];
-  }
+  },
+
+  onLoading: function() {},
+  onError: function() {}
 });
 // Use Backbone's extend inheritance
 Controller.extend = Backbone.Model.extend;
