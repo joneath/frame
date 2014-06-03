@@ -7,9 +7,9 @@ module.exports = View.extend({
   showEmpty: noOp,
   hideEmpty: noOp,
   collectionEvents: {
-    'reset': 'render',
+    'reset': 'onReset',
     'add': 'addOne hideEmpty',
-    'remove': 'checkEmpty',
+    'remove': 'checkEmpty removeFromViews',
     'fetch': 'whenFetching'
   },
 
@@ -18,17 +18,27 @@ module.exports = View.extend({
     _.bindAll(this, 'onScroll');
     _.extend(this, _.pick(options, collectionViewOptions));
     this._setupInfinite(options);
-    this._attachResourceEventsGroup({
-      collection: this.collectionEvents
-    });
+    if (!this.fetching) {
+      this._attachResourceEventsGroup({
+        collection: this.collectionEvents
+      });
+    }
+    if (this.collection.promise && this.collection.promise.state() === 'rejected') {
+      this._errored = true;
+    }
   },
 
   render: function() {
     var templateHTML = this._template ? this._template() : '';
 
+    this._views = [];
     this.hideEmpty();
     this.$el.html(templateHTML);
     if (this.fetching) {
+      return this;
+    }
+    if (this._errored) {
+      this.onError();
       return this;
     }
     if (this.collection.length) {
@@ -41,26 +51,38 @@ module.exports = View.extend({
     return this;
   },
 
-  addOne: function(model) {
-    var modelAt = this.collection.indexOf(model),
-        $viewAtEl,
-        newView;
+  onReset: function() {
+    this.fetching = false;
+    this.render();
+  },
 
-    newView = new this.modelView({
+  addOne: function(model) {
+    var modelAt = this.collection.indexOf(model);
+    var currentViewInPlace = this._views[modelAt];
+    var newView = new this.modelView({
       model: model,
       resources: this.resources
     });
-    this.beforeEach && newView.$el.before(this.beforeEach(model));
-    $viewAtEl = this._viewElAt(modelAt);
+    var $tmp;
 
-    if ($viewAtEl.length) {
-      this.before($viewAtEl, newView);
+    if (currentViewInPlace) {
+      currentViewInPlace._$before && ($tmp = currentViewInPlace._$before.detach());
+      this.before(currentViewInPlace.$el, newView);
+      $tmp && currentViewInPlace.$el.before($tmp);
     } else {
       this.append(newView);
     }
 
-    this.afterEach && newView.$el.after(this.afterEach(model));
-    this._views.push(newView);
+    if (this.beforeEach) {
+      $tmp = $(this.beforeEach(model));
+      newView.$el.before($tmp);
+      newView._$before = $tmp;
+    }
+    if (this.afterEach) {
+      $tmp = $(this.afterEach(model));
+      newView.$el.after($tmp);
+      newView._$after = $tmp;
+    }
 
     return newView;
   },
@@ -90,7 +112,14 @@ module.exports = View.extend({
   },
 
   afterFetch: function() {
-    this.checkEmpty();
+    if (!this._rendered) {
+      this._attachResourceEventsGroup({
+        collection: this.collectionEvents
+      });
+      this.render();
+    } else {
+      this.checkEmpty();
+    }
   },
 
   checkEmpty: function() {
@@ -99,6 +128,17 @@ module.exports = View.extend({
     } else {
       this.hideEmpty();
     }
+  },
+
+  removeFromViews: function(model) {
+    var viewIndex;
+
+    _.each(this._views, function(view, i) {
+      if (view.model === model) {
+        viewIndex = i;
+      }
+    });
+    viewIndex && this._views.splice(viewIndex, 1);
   },
 
   onRemove: function() {

@@ -50,8 +50,12 @@ module.exports = {
   },
 
   destroy: function(id) {
-    var exists = Frame._store[id];
+    var exists = this.exists(id);
     delete Frame._store[id];
     return exists;
+  },
+
+  exists: function(id) {
+    return !!Frame._store[id];
   }
 };

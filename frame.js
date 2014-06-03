@@ -187,9 +187,13 @@
     },
 
     destroy: function(id) {
-      var exists = Frame._store[id];
+      var exists = this.exists(id);
       delete Frame._store[id];
       return exists;
+    },
+
+    exists: function(id) {
+      return !!Frame._store[id];
     }
   };
 
@@ -240,10 +244,11 @@
       if (!url) {
         throw 'url is required to fetch resource';
       }
-      // Replace placeholder url fragments
-      if (this._nested && this._nested.length) {
+      // Replace placeholder url fragments falling back to collection
+      var nested = this._nested || (this.collection ? this.collection._nested : null);
+      if (nested && nested.length) {
         url = url.replace(namedParamRegex, function(val) {
-          val = this._nested[i];
+          val = nested[i];
           i += 1;
           return val;
         }.bind(this));
@@ -275,14 +280,14 @@
           if (!data) return;
           // Support implicit expand config - no collection/model specified
           if (expandConfig.length == 1) {
-            if (data.length) {
-              expandConfig.push('collections');
-            } else {
-              expandConfig.push('models');
-            }
             expandConfig.push('base');
           }
-          Resource = require(expandConfig[1] + '/' + expandConfig[2]);
+          if (data.length) {
+            expandConfig.push('collections');
+          } else {
+            expandConfig.push('models');
+          }
+          Resource = require(expandConfig[2] + '/' + expandConfig[1]);
           nestedResource = new Resource(data);
           this._watchNested(fieldName, nestedResource);
           this.associated[fieldName] = nestedResource;
@@ -426,12 +431,21 @@
     },
 
     _model: function(attrs, options) {
-      var model;
+      var model, storeId;
 
       if (this.model) {
         model = new this.model(attrs, options);
         if (model.id && this.modelName != 'base') {
-          model.store(this.modelName + ':' + model.id);
+          storeId = this.modelName + ':' + model.id;
+          if (Frame.store.exists(storeId)) {
+            model = Frame.store.get({
+              id: model.id,
+              resource: this.modelName
+            });
+            model.set(attrs);
+          } else {
+            Frame.store.set(storeId, model);
+          }
         }
       } else {
         model = new Frame.Model(attrs, options);
@@ -619,14 +633,14 @@
           }.bind(this))
           .then(
             function() {
-              action.call(this, data, args);
+              this.append(action.call(this, data, args));
             }.bind(this),
             function() {
               this.onError.apply(this, arguments);
             }.bind(this)
           );
         } else {
-          action.apply(this, args);
+          this.append(action.apply(this, args));
         }
       } else {
         throw 'Controller does not support the ' + name + ' action!';
@@ -634,6 +648,9 @@
     },
 
     append: function(views) {
+      if (_.isUndefined(views)) {
+        return this;
+      }
       if (!_.isArray(views)) {
         views = [views];
       }
@@ -808,7 +825,7 @@
 
       var promises;
       if (this.waitForResources) {
-        promises = this.collectResourcesPromises();
+        promises = this.collectResourcesPromises('pending');
         promises.length && this.whenFetching(promises);
       }
 
@@ -818,6 +835,7 @@
     render: function() {
       var data = {}, templateData = {};
 
+      this._views = [];
       if (this.fetching) {
         return this;
       }
@@ -861,8 +879,12 @@
       } else {
         this.data[key] = val;
       }
-      // Re-render view on set only if already rendered
-      this._rendered && this.render();
+    },
+
+    outlet: function(name, views) {
+      var $el = this.$('#outlet-' + name);
+      this._attach('replaceWith', views, $el);
+      return this;
     },
 
     prepend: function(views, $el) {
@@ -970,10 +992,11 @@
       return this;
     },
 
-    collectResourcesPromises: function() {
+    collectResourcesPromises: function(state) {
       var promises = [];
+      state || (state = 'pending');
       function collectPendingPromise(resource) {
-        if (resource && resource.promise && resource.promise.state() === 'pending') {
+        if (resource && resource.promise && resource.promise.state() === state) {
           promises.push(resource.promise);
         }
       }
@@ -1094,9 +1117,9 @@
     showEmpty: noOp,
     hideEmpty: noOp,
     collectionEvents: {
-      'reset': 'render',
+      'reset': 'onReset',
       'add': 'addOne hideEmpty',
-      'remove': 'checkEmpty',
+      'remove': 'checkEmpty removeFromViews',
       'fetch': 'whenFetching'
     },
 
@@ -1105,17 +1128,27 @@
       _.bindAll(this, 'onScroll');
       _.extend(this, _.pick(options, collectionViewOptions));
       this._setupInfinite(options);
-      this._attachResourceEventsGroup({
-        collection: this.collectionEvents
-      });
+      if (!this.fetching) {
+        this._attachResourceEventsGroup({
+          collection: this.collectionEvents
+        });
+      }
+      if (this.collection.promise && this.collection.promise.state() === 'rejected') {
+        this._errored = true;
+      }
     },
 
     render: function() {
       var templateHTML = this._template ? this._template() : '';
 
+      this._views = [];
       this.hideEmpty();
       this.$el.html(templateHTML);
       if (this.fetching) {
+        return this;
+      }
+      if (this._errored) {
+        this.onError();
         return this;
       }
       if (this.collection.length) {
@@ -1123,31 +1156,44 @@
       } else {
         this.showEmpty();
       }
+      this._rendered = true;
       this.afterRender();
 
       return this;
     },
 
-    addOne: function(model) {
-      var modelAt = this.collection.indexOf(model),
-          $viewAtEl,
-          newView;
+    onReset: function() {
+      this.fetching = false;
+      this.render();
+    },
 
-      newView = new this.modelView({
+    addOne: function(model) {
+      var modelAt = this.collection.indexOf(model);
+      var currentViewInPlace = this._views[modelAt];
+      var newView = new this.modelView({
         model: model,
         resources: this.resources
       });
-      this.beforeEach && newView.$el.before(this.beforeEach(model));
-      $viewAtEl = this._viewElAt(modelAt);
+      var $tmp;
 
-      if ($viewAtEl.length) {
-        this.before($viewAtEl, newView);
+      if (currentViewInPlace) {
+        currentViewInPlace._$before && ($tmp = currentViewInPlace._$before.detach());
+        this.before(currentViewInPlace.$el, newView);
+        $tmp && currentViewInPlace.$el.before($tmp);
       } else {
         this.append(newView);
       }
 
-      this.afterEach && newView.$el.after(this.afterEach(model));
-      this._views.push(newView);
+      if (this.beforeEach) {
+        $tmp = $(this.beforeEach(model));
+        newView.$el.before($tmp);
+        newView._$before = $tmp;
+      }
+      if (this.afterEach) {
+        $tmp = $(this.afterEach(model));
+        newView.$el.after($tmp);
+        newView._$after = $tmp;
+      }
 
       return newView;
     },
@@ -1177,7 +1223,14 @@
     },
 
     afterFetch: function() {
-      this.checkEmpty();
+      if (!this._rendered) {
+        this._attachResourceEventsGroup({
+          collection: this.collectionEvents
+        });
+        this.render();
+      } else {
+        this.checkEmpty();
+      }
     },
 
     checkEmpty: function() {
@@ -1186,6 +1239,17 @@
       } else {
         this.hideEmpty();
       }
+    },
+
+    removeFromViews: function(model) {
+      var viewIndex;
+
+      _.each(this._views, function(view, i) {
+        if (view.model === model) {
+          viewIndex = i;
+        }
+      });
+      viewIndex && this._views.splice(viewIndex, 1);
     },
 
     onRemove: function() {

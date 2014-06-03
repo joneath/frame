@@ -31,7 +31,7 @@ module.exports = View = Backbone.View.extend({
 
     var promises;
     if (this.waitForResources) {
-      promises = this.collectResourcesPromises();
+      promises = this.collectResourcesPromises('pending');
       promises.length && this.whenFetching(promises);
     }
 
@@ -41,6 +41,7 @@ module.exports = View = Backbone.View.extend({
   render: function() {
     var data = {}, templateData = {};
 
+    this._views = [];
     if (this.fetching) {
       return this;
     }
@@ -84,8 +85,12 @@ module.exports = View = Backbone.View.extend({
     } else {
       this.data[key] = val;
     }
-    // Re-render view on set only if already rendered
-    this._rendered && this.render();
+  },
+
+  outlet: function(name, views) {
+    var $el = this.$('#outlet-' + name);
+    this._attach('replaceWith', views, $el);
+    return this;
   },
 
   prepend: function(views, $el) {
@@ -193,10 +198,11 @@ module.exports = View = Backbone.View.extend({
     return this;
   },
 
-  collectResourcesPromises: function() {
+  collectResourcesPromises: function(state) {
     var promises = [];
+    state || (state = '');
     function collectPendingPromise(resource) {
-      if (resource && resource.promise && resource.promise.state() === 'pending') {
+      if (resource && resource.promise && resource.promise.state() === state) {
         promises.push(resource.promise);
       }
     }

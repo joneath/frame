@@ -51,12 +51,21 @@ module.exports = Collection = Backbone.Collection.extend({
   },
 
   _model: function(attrs, options) {
-    var model;
+    var model, storeId;
 
     if (this.model) {
       model = new this.model(attrs, options);
       if (model.id && this.modelName != 'base') {
-        model.store(this.modelName + ':' + model.id);
+        storeId = this.modelName + ':' + model.id;
+        if (Frame.store.exists(storeId)) {
+          model = Frame.store.get({
+            id: model.id,
+            resource: this.modelName
+          });
+          model.set(attrs);
+        } else {
+          Frame.store.set(storeId, model);
+        }
       }
     } else {
       model = new Frame.Model(attrs, options);

@@ -128,14 +128,14 @@ _.extend(Controller.prototype, Backbone.Events, {
         }.bind(this))
         .then(
           function() {
-            action.call(this, data, args);
+            this.append(action.call(this, data, args));
           }.bind(this),
           function() {
             this.onError.apply(this, arguments);
           }.bind(this)
         );
       } else {
-        action.apply(this, args);
+        this.append(action.apply(this, args));
       }
     } else {
       throw 'Controller does not support the ' + name + ' action!';
@@ -143,6 +143,9 @@ _.extend(Controller.prototype, Backbone.Events, {
   },
 
   append: function(views) {
+    if (_.isUndefined(views)) {
+      return this;
+    }
     if (!_.isArray(views)) {
       views = [views];
     }

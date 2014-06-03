@@ -32,10 +32,11 @@ module.exports = Model = Backbone.Model.extend({
     if (!url) {
       throw 'url is required to fetch resource';
     }
-    // Replace placeholder url fragments
-    if (this._nested && this._nested.length) {
+    // Replace placeholder url fragments falling back to collection
+    var nested = this._nested || (this.collection ? this.collection._nested : null);
+    if (nested && nested.length) {
       url = url.replace(namedParamRegex, function(val) {
-        val = this._nested[i];
+        val = nested[i];
         i += 1;
         return val;
       }.bind(this));
@@ -67,14 +68,14 @@ module.exports = Model = Backbone.Model.extend({
         if (!data) return;
         // Support implicit expand config - no collection/model specified
         if (expandConfig.length == 1) {
-          if (data.length) {
-            expandConfig.push('collections');
-          } else {
-            expandConfig.push('models');
-          }
           expandConfig.push('base');
         }
-        Resource = require(expandConfig[1] + '/' + expandConfig[2]);
+        if (data.length) {
+          expandConfig.push('collections');
+        } else {
+          expandConfig.push('models');
+        }
+        Resource = require(expandConfig[2] + '/' + expandConfig[1]);
         nestedResource = new Resource(data);
         this._watchNested(fieldName, nestedResource);
         this.associated[fieldName] = nestedResource;
